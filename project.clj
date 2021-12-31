@@ -1,4 +1,4 @@
-(defproject org.cmql/cmql-js "0.1.0-SNAPSHOT"
+(defproject org.cmql/cmql-js "0.2.0-SNAPSHOT"
   :description "Query MongoDB with up to 3x less code (cljs/node-driver)"
   :url "https://github.com/tkaryadis/cmql-js"
   :license {:name "Eclipse Public License"
@@ -7,7 +7,7 @@
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [org.clojure/core.async "1.1.587"]
                  [org.clojure/clojurescript  "1.10.866"]
-                 [org.cmql/cmql-core "0.1.0-SNAPSHOT"]
+                 [org.cmql/cmql-core "0.2.0-SNAPSHOT"]
                  [frankiesardo/linked "1.3.0"]
                  [cljs-bean "1.6.0"]]
 
