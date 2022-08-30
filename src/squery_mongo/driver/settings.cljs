@@ -1,6 +1,6 @@
-(ns cmql-js.driver.settings)
+(ns squery-mongo.driver.settings)
 
-;;defaults,i can add anything i want,but cMQL-j will look those if i dont give a argument it needs
+;;defaults,i can add anything i want,but squery-j will look those if i dont give a argument it needs
 #_{:client client                              ;;default
    :session session                            ;;default
    :db db                                      ;;default

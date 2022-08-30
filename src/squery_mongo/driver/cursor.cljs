@@ -1,9 +1,9 @@
-(ns cmql-js.driver.cursor
-  (:require-macros [cmql-js.driver.cursor])
+(ns squery-mongo.driver.cursor
+  (:require-macros [squery-mongo.driver.cursor])
   (:require cljs.pprint
             [cljs.core.async :refer [go go-loop <!]]
             [cljs.core.async.interop :refer-macros [<p!]]
-    ;[cmql-js.driver.document :refer [json->clj]]
+    ;[squery-mongo.driver.document :refer [json->clj]]
     ;[cljs.nodejs :as nodejs]
             ))
 

@@ -1,6 +1,6 @@
-(ns cmql-js.driver.client
+(ns squery-mongo.driver.client
   (:require clojure.string
-            [cmql-js.driver.settings :refer [defaults]]))
+            [squery-mongo.driver.settings :refer [defaults]]))
 
 (def mongodb (js/require "mongodb"))
 

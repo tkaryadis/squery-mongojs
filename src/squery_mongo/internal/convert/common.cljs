@@ -1,5 +1,5 @@
-(ns cmql-js.internal.convert.common
-  (:require [cmql-js.driver.settings :refer [defaults]]))
+(ns squery-mongo.internal.convert.common
+  (:require [squery-mongo.driver.settings :refer [defaults]]))
 
 (defn decode-js? [options]
   (if (.hasOwnProperty options "decode")

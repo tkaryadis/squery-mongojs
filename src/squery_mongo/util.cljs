@@ -1,5 +1,5 @@
-(ns cmql-js.util
-  (:require-macros [cmql-js.util])
+(ns squery-mongo.util
+  (:require-macros [squery-mongo.util])
   (:require [cljs.core.async :refer [go  <! take!]]))
 
 (defn js-async

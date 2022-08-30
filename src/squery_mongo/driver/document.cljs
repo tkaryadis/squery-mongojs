@@ -1,5 +1,5 @@
-(ns cmql-js.driver.document
-  (:require [cmql-core.utils :refer [ordered-map]]))
+(ns squery-mongo.driver.document
+  (:require [squery-mongo-core.utils :refer [ordered-map]]))
 
 (defn clj->shallow-js
   "Changes the external clj-map to js-map (doesn't change the keys or the values)"

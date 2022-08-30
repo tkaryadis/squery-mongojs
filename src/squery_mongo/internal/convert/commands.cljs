@@ -1,6 +1,6 @@
-(ns cmql-js.internal.convert.commands
-  (:require [cmql-core.internal.convert.commands :refer [split-db-namespace]]
-            [cmql-js.driver.settings :refer [defaults]]))
+(ns squery-mongo.internal.convert.commands
+  (:require [squery-mongo-core.internal.convert.commands :refer [split-db-namespace]]
+            [squery-mongo.driver.settings :refer [defaults]]))
 
 (def mongodb (js/require "mongodb"))
 (def Collection (.-Collection mongodb))
