@@ -1,7 +1,7 @@
 (ns squery-mongo.commands
   (:require squery-mongo-core.operators.operators))
 
-;;--------------------------------------commands------------------------------------------------------------------------
+;;--------------------------------------read/write------------------------------------------------------------------------
 
 (defmacro insert [command-coll-info documents & args]
   `(squery-mongo.internal.convert.commands-run/run-command
@@ -93,8 +93,7 @@
          (apply squery-mongo-core.read-write/q-distinct-f
                 ~(vec (cons `(squery-mongo.internal.convert.commands/get-db-namespace ~command-coll-info) args)))))))
 
-
-;;------------------------------------------methods called like commands------------------------------------------------
+;;------------------------------------------read/write with driver method use-----------------------------------------
 
 (defmacro q [command-coll-info & args]
   `(squery-mongo.internal.convert.commands-run/run-aggregation
@@ -108,3 +107,21 @@
      (squery-mongo.internal.convert.commands/get-command-info ~command-coll-info)
      (let ~squery-mongo-core.operators.operators/operators-mappings
        (apply squery-mongo-core.read-write/fq-f ~(vec (cons `(squery-mongo.internal.convert.commands/get-db-namespace ~command-coll-info) args))))))
+
+
+;;-------------------------------------------admin-------------------------------------------------------------------
+
+(defmacro drop-collection [command-coll-info & args]
+  `(squery-mongo.internal.convert.commands-run/run-command
+     (squery-mongo.internal.convert.commands/get-command-info ~command-coll-info)
+     (let ~squery-mongo-core.operators.operators/operators-mappings
+       (apply squery-mongo-core.administration/drop-collection
+              ~(vec (cons `(squery-mongo.internal.convert.commands/get-db-namespace ~command-coll-info) args))))))
+
+(defmacro drop-collection! [command-coll-info & args]
+  `(cljs.core.async/<!
+     (squery-mongo.internal.convert.commands-run/run-command
+       (squery-mongo.internal.convert.commands/get-command-info ~command-coll-info)
+       (let ~squery-mongo-core.operators.operators/operators-mappings
+         (apply squery-mongo-core.administration/drop-collection
+                ~(vec (cons `(squery-mongo.internal.convert.commands/get-db-namespace ~command-coll-info) args)))))))

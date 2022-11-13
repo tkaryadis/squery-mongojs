@@ -7,6 +7,11 @@
   [bindings & body]
   `(go (let ~bindings ~@body)))
 
+(defmacro gotry
+  "Like (go (let ...))"
+  [bindings & body]
+  `(go (try ~bindings ~@body)))
+
 (defmacro squery
   "squery code should be under this enviroment,this enviroment is auto-included from query macros.
    But its not included in the operators

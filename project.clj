@@ -11,15 +11,15 @@
                  [frankiesardo/linked "1.3.0"]
                  [cljs-bean "1.6.0"]]
 
-  :cljsbuild {:builds [{:id           "cmql-js"
+  :cljsbuild {:builds [{:id           "squery-js"
                         :source-paths ["src"]
                         :compiler     {
-                                       :output-to     "out/cmql.js"
-                                       :main          "cmql-js.cmql-repl"
+                                       :output-to     "out/squery.js"
+                                       :main          "squery-mongo.test" ;;  "squery-mongo.squery-repl"
                                        :target        :nodejs
                                        :optimizations :none ;;advanced
                                        :install-deps   true
-                                       :npm-deps  {:mongodb "4.0.0"}
+                                       :npm-deps  {:mongodb "4.11.0"}
                                        }}]}
 
   :plugins [[lein-cljsbuild "1.1.8"]

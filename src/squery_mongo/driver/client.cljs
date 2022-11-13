@@ -32,6 +32,10 @@
 ;;default port= 27017 (if i dont add it )
 ;;Example "mongodb://user1:pwd1@host1/?authSource=db1&authMechanism=SCRAM-SHA-256&ssl=true"
 ;;https://docs.mongodb.com/manual/reference/connection-string/
+;;srv(record) is used to connect to a host and from that host to get the cluster hosts
+;;to avoid including all cluster hostes in the connection string,
+;;its more flexible to changes also in cluster
+;;mongodb+srv://[username:pass]@host/database?option1&option2...
 #_(defn connection-string [options]
     (let [username (get options :username)
           password (get options :password)

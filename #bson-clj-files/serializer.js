@@ -4,8 +4,8 @@ exports.serializeInto = void 0;
 var binary_1 = require("../binary");
 var constants = require("../constants");
 var ensure_buffer_1 = require("../ensure_buffer");
+var error_1 = require("../error");
 var extended_json_1 = require("../extended_json");
-var float_parser_1 = require("../float_parser");
 var long_1 = require("../long");
 var map_1 = require("../map");
 var utils_1 = require("./utils");
@@ -39,6 +39,8 @@ function serializeString(buffer, key, value, index, isArray) {
     buffer[index++] = 0;
     return index;
 }
+var SPACE_FOR_FLOAT64 = new Uint8Array(8);
+var DV_FOR_FLOAT64 = new DataView(SPACE_FOR_FLOAT64.buffer, SPACE_FOR_FLOAT64.byteOffset, SPACE_FOR_FLOAT64.byteLength);
 function serializeNumber(buffer, key, value, index, isArray) {
     // We have an integer value
     // TODO(NODE-2529): Add support for big int
@@ -72,7 +74,8 @@ function serializeNumber(buffer, key, value, index, isArray) {
         index = index + numberOfWrittenBytes;
         buffer[index++] = 0;
         // Write float
-        float_parser_1.writeIEEE754(buffer, value, index, 'little', 52, 8);
+        DV_FOR_FLOAT64.setFloat64(0, value, true);
+        buffer.set(SPACE_FOR_FLOAT64, index);
         // Adjust index
         index = index + 8;
     }
@@ -218,13 +221,13 @@ function serializeObjectId(buffer, key, value, index, isArray) {
     if (typeof value.id === 'string') {
         buffer.write(value.id, index, undefined, 'binary');
     }
-    else if (utils_1.isUint8Array(value.id)) {
+    else if ((0, utils_1.isUint8Array)(value.id)) {
         // Use the standard JS methods here because buffer.copy() is buggy with the
         // browser polyfill
         buffer.set(value.id.subarray(0, 12), index);
     }
     else {
-        throw new TypeError('object [' + JSON.stringify(value) + '] is not a valid ObjectId');
+        throw new error_1.BSONTypeError('object [' + JSON.stringify(value) + '] is not a valid ObjectId');
     }
     // Adjust index
     return index + 12;
@@ -249,14 +252,12 @@ function serializeBuffer(buffer, key, value, index, isArray) {
     // Write the default subtype
     buffer[index++] = constants.BSON_BINARY_SUBTYPE_DEFAULT;
     // Copy the content form the binary field to the buffer
-    buffer.set(ensure_buffer_1.ensureBuffer(value), index);
+    buffer.set((0, ensure_buffer_1.ensureBuffer)(value), index);
     // Adjust the index
     index = index + size;
     return index;
 }
-function serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, isArray, path)
-{
-    //cljs.core.prn("serialize",value);
+function serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, isArray, path) {
     if (checkKeys === void 0) { checkKeys = false; }
     if (depth === void 0) { depth = 0; }
     if (serializeFunctions === void 0) { serializeFunctions = false; }
@@ -265,19 +266,21 @@ function serializeObject(buffer, key, value, index, checkKeys, depth, serializeF
     if (path === void 0) { path = []; }
     for (var i = 0; i < path.length; i++) {
         if (path[i] === value)
-            throw new Error('cyclic dependency detected');
+            throw new error_1.BSONError('cyclic dependency detected');
     }
     // Push value to stack
     path.push(value);
     // Write the type
-
+    
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //<cljs
     var isClojureVector=cljs.core.vector_QMARK_(value);
     buffer[index++] = (isClojureVector || Array.isArray(value)) ? constants.BSON_DATA_ARRAY : constants.BSON_DATA_OBJECT;
     //cljs>
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    
+    
+    
     // Number of written bytes
     var numberOfWrittenBytes = !isArray
         ? buffer.write(key, index, undefined, 'utf8')
@@ -360,7 +363,8 @@ function serializeDouble(buffer, key, value, index, isArray) {
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
     // Write float
-    float_parser_1.writeIEEE754(buffer, value.value, index, 'little', 52, 8);
+    DV_FOR_FLOAT64.setFloat64(0, value.value, true);
+    buffer.set(SPACE_FOR_FLOAT64, index);
     // Adjust index
     index = index + 8;
     return index;
@@ -377,7 +381,7 @@ function serializeFunction(buffer, key, value, index, _checkKeys, _depth, isArra
     index = index + numberOfWrittenBytes;
     buffer[index++] = 0;
     // Function string
-    var functionString = utils_1.normalizedFunctionString(value);
+    var functionString = (0, utils_1.normalizedFunctionString)(value);
     // Write the string
     var size = buffer.write(functionString, index + 4, undefined, 'utf8') + 1;
     // Write the size of the string to buffer
@@ -568,17 +572,16 @@ function getArrayMember(isClojureVector,array,index)      //cljs
   else return array[index];                                //cljs
 }
 
-function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializeFunctions, ignoreUndefined, path)
-{
+function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializeFunctions, ignoreUndefined, path) {
     if (checkKeys === void 0) { checkKeys = false; }
     if (startingIndex === void 0) { startingIndex = 0; }
     if (depth === void 0) { depth = 0; }
     if (serializeFunctions === void 0) { serializeFunctions = false; }
     if (ignoreUndefined === void 0) { ignoreUndefined = true; }
     if (path === void 0) { path = []; }
-
-
-    //cljs//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    
+        //cljs//////////////////////////////////////////////////////////////////////////////////////////////////////////////
     var isClojureMap=false;              //cljs
     var isClojureVector=false;           //cljs
 
@@ -591,31 +594,31 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
       isClojureVector=true;                   //cljs
     }
     //cljs//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+    
+    
+    
+    
+    
     startingIndex = startingIndex || 0;
     path = path || [];
     // Push the object to the path
     path.push(object);
     // Start place to serialize into
     var index = startingIndex + 4;
-
-
+    
     // Special case isArray
     if (isClojureVector || Array.isArray(object))   //cljs , nested arrays
     {
         var arraySize=getArraySize(isClojureVector,object);   //cljs
-
+        
         // Get object keys
         for (var i = 0; i < arraySize; i++)                   //cljs replace  object.length with arraySize
         {
-            var key = '' + i;
-
+            var key = "".concat(i);
             var value = getArrayMember(isClojureVector,object,i);   //cljs
-
+            
             // Is there an override value
-            if (value && value.toBSON) {
-                if (typeof value.toBSON !== 'function')
-                    throw new TypeError('toBSON is not a function');
+            if (typeof (value === null || value === void 0 ? void 0 : value.toBSON) === 'function') {
                 value = value.toBSON();
             }
             if (typeof value === 'string') {
@@ -625,12 +628,12 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
                 index = serializeNumber(buffer, key, value, index, true);
             }
             else if (typeof value === 'bigint') {
-                throw new TypeError('Unsupported type BigInt, please use Decimal128');
+                throw new error_1.BSONTypeError('Unsupported type BigInt, please use Decimal128');
             }
             else if (typeof value === 'boolean') {
                 index = serializeBoolean(buffer, key, value, index, true);
             }
-            else if (value instanceof Date || utils_1.isDate(value)) {
+            else if (value instanceof Date || (0, utils_1.isDate)(value)) {
                 index = serializeDate(buffer, key, value, index, true);
             }
             else if (value === undefined) {
@@ -642,17 +645,17 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
             else if (value['_bsontype'] === 'ObjectId' || value['_bsontype'] === 'ObjectID') {
                 index = serializeObjectId(buffer, key, value, index, true);
             }
-            else if (utils_1.isUint8Array(value)) {
+            else if ((0, utils_1.isUint8Array)(value)) {
                 index = serializeBuffer(buffer, key, value, index, true);
             }
-            else if (value instanceof RegExp || utils_1.isRegExp(value)) {
+            else if (value instanceof RegExp || (0, utils_1.isRegExp)(value)) {
                 index = serializeRegExp(buffer, key, value, index, true);
             }
             else if (typeof value === 'object' && value['_bsontype'] == null) {
                 index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, true, path);
             }
             else if (typeof value === 'object' &&
-                extended_json_1.isBSONType(value) &&
+                (0, extended_json_1.isBSONType)(value) &&
                 value._bsontype === 'Decimal128') {
                 index = serializeDecimal128(buffer, key, value, index, true);
             }
@@ -687,11 +690,11 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
                 index = serializeMinMax(buffer, key, value, index, true);
             }
             else if (typeof value['_bsontype'] !== 'undefined') {
-                throw new TypeError('Unrecognized or invalid _bsontype: ' + value['_bsontype']);
+                throw new error_1.BSONTypeError("Unrecognized or invalid _bsontype: ".concat(String(value['_bsontype'])));
             }
         }
     }
-    else if (object instanceof map_1.Map || utils_1.isMap(object)) {
+    else if (object instanceof map_1.Map || (0, utils_1.isMap)(object)) {
         var iterator = object.entries();
         var done = false;
         while (!done) {
@@ -728,13 +731,13 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
             else if (type === 'number') {
                 index = serializeNumber(buffer, key, value, index);
             }
-            else if (type === 'bigint' || utils_1.isBigInt64Array(value) || utils_1.isBigUInt64Array(value)) {
-                throw new TypeError('Unsupported type BigInt, please use Decimal128');
+            else if (type === 'bigint' || (0, utils_1.isBigInt64Array)(value) || (0, utils_1.isBigUInt64Array)(value)) {
+                throw new error_1.BSONTypeError('Unsupported type BigInt, please use Decimal128');
             }
             else if (type === 'boolean') {
                 index = serializeBoolean(buffer, key, value, index);
             }
-            else if (value instanceof Date || utils_1.isDate(value)) {
+            else if (value instanceof Date || (0, utils_1.isDate)(value)) {
                 index = serializeDate(buffer, key, value, index);
             }
             else if (value === null || (value === undefined && ignoreUndefined === false)) {
@@ -743,10 +746,10 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
             else if (value['_bsontype'] === 'ObjectId' || value['_bsontype'] === 'ObjectID') {
                 index = serializeObjectId(buffer, key, value, index);
             }
-            else if (utils_1.isUint8Array(value)) {
+            else if ((0, utils_1.isUint8Array)(value)) {
                 index = serializeBuffer(buffer, key, value, index);
             }
-            else if (value instanceof RegExp || utils_1.isRegExp(value)) {
+            else if (value instanceof RegExp || (0, utils_1.isRegExp)(value)) {
                 index = serializeRegExp(buffer, key, value, index);
             }
             else if (type === 'object' && value['_bsontype'] == null) {
@@ -786,127 +789,123 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
                 index = serializeMinMax(buffer, key, value, index);
             }
             else if (typeof value['_bsontype'] !== 'undefined') {
-                throw new TypeError('Unrecognized or invalid _bsontype: ' + value['_bsontype']);
+                throw new error_1.BSONTypeError("Unrecognized or invalid _bsontype: ".concat(String(value['_bsontype'])));
             }
         }
     }
-    else
-    {
-        // Did we provide a custom serialization method
-        if (object.toBSON) {
-            if (typeof object.toBSON !== 'function')
-                throw new TypeError('toBSON is not a function');
+    else {
+        if (typeof (object === null || object === void 0 ? void 0 : object.toBSON) === 'function') {
+            // Provided a custom serialization method
             object = object.toBSON();
-            if (object != null && typeof object !== 'object')
-                throw new TypeError('toBSON function did not return an object');
+            if (object != null && typeof object !== 'object') {
+                throw new error_1.BSONTypeError('toBSON function did not return an object');
+            }
         }
-
-
-        // Iterate over all the keys
-        //2 implementation one for clojureMap and 1 the default
-
+        
+        
         if (!isClojureMap)    //cljs
         {
-          for (var key in object) {
-                      var value = object[key];
-                      // Is there an override value
-                      if (value && value.toBSON) {
-                          if (typeof value.toBSON !== 'function')
-                              throw new TypeError('toBSON is not a function');
-                          value = value.toBSON();
-                      }
-                      // Check the type of the value
-                      var type = typeof value;
-                      // Check the key and throw error if it's illegal
-                      if (typeof key === 'string' && !ignoreKeys.has(key)) {
-                          if (key.match(regexp) != null) {
-                              // The BSON spec doesn't allow keys with null bytes because keys are
-                              // null-terminated.
-                              throw Error('key ' + key + ' must not contain null bytes');
-                          }
-                          if (checkKeys) {
-                              if ('$' === key[0]) {
-                                  throw Error('key ' + key + " must not start with '$'");
-                              }
-                              else if (~key.indexOf('.')) {
-                                  throw Error('key ' + key + " must not contain '.'");
-                              }
-                          }
-                      }
-                      if (type === 'string') {
-                          index = serializeString(buffer, key, value, index);
-                      }
-                      else if (type === 'number') {
-                          index = serializeNumber(buffer, key, value, index);
-                      }
-                      else if (type === 'bigint') {
-                          throw new TypeError('Unsupported type BigInt, please use Decimal128');
-                      }
-                      else if (type === 'boolean') {
-                          index = serializeBoolean(buffer, key, value, index);
-                      }
-                      else if (value instanceof Date || utils_1.isDate(value)) {
-                          index = serializeDate(buffer, key, value, index);
-                      }
-                      else if (value === undefined) {
-                          if (ignoreUndefined === false)
-                              index = serializeNull(buffer, key, value, index);
-                      }
-                      else if (value === null) {
-                          index = serializeNull(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'ObjectId' || value['_bsontype'] === 'ObjectID') {
-                          index = serializeObjectId(buffer, key, value, index);
-                      }
-                      else if (utils_1.isUint8Array(value)) {
-                          index = serializeBuffer(buffer, key, value, index);
-                      }
-                      else if (value instanceof RegExp || utils_1.isRegExp(value)) {
-                          index = serializeRegExp(buffer, key, value, index);
-                      }
-                      else if (type === 'object' && value['_bsontype'] == null) {
-                          index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, false, path);
-                      }
-                      else if (type === 'object' && value['_bsontype'] === 'Decimal128') {
-                          index = serializeDecimal128(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'Long' || value['_bsontype'] === 'Timestamp') {
-                          index = serializeLong(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'Double') {
-                          index = serializeDouble(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'Code') {
-                          index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined);
-                      }
-                      else if (typeof value === 'function' && serializeFunctions) {
-                          index = serializeFunction(buffer, key, value, index, checkKeys, depth, serializeFunctions);
-                      }
-                      else if (value['_bsontype'] === 'Binary') {
-                          index = serializeBinary(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'Symbol') {
-                          index = serializeSymbol(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'DBRef') {
-                          index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions);
-                      }
-                      else if (value['_bsontype'] === 'BSONRegExp') {
-                          index = serializeBSONRegExp(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'Int32') {
-                          index = serializeInt32(buffer, key, value, index);
-                      }
-                      else if (value['_bsontype'] === 'MinKey' || value['_bsontype'] === 'MaxKey') {
-                          index = serializeMinMax(buffer, key, value, index);
-                      }
-                      else if (typeof value['_bsontype'] !== 'undefined') {
-                          throw new TypeError('Unrecognized or invalid _bsontype: ' + value['_bsontype']);
-                      }
-                  }
+        
+        // Iterate over all the keys
+        for (var key in object) {
+            var value = object[key];
+            
+            // Is there an override value
+            if (typeof (value === null || value === void 0 ? void 0 : value.toBSON) === 'function') {
+                value = value.toBSON();
+            }
+            // Check the type of the value
+            var type = typeof value;
+            // Check the key and throw error if it's illegal
+            if (typeof key === 'string' && !ignoreKeys.has(key)) {
+                if (key.match(regexp) != null) {
+                    // The BSON spec doesn't allow keys with null bytes because keys are
+                    // null-terminated.
+                    throw Error('key ' + key + ' must not contain null bytes');
+                }
+                if (checkKeys) {
+                    if ('$' === key[0]) {
+                        throw Error('key ' + key + " must not start with '$'");
+                    }
+                    else if (~key.indexOf('.')) {
+                        throw Error('key ' + key + " must not contain '.'");
+                    }
+                }
+            }
+            if (type === 'string') {
+                index = serializeString(buffer, key, value, index);
+            }
+            else if (type === 'number') {
+                index = serializeNumber(buffer, key, value, index);
+            }
+            else if (type === 'bigint') {
+                throw new error_1.BSONTypeError('Unsupported type BigInt, please use Decimal128');
+            }
+            else if (type === 'boolean') {
+                index = serializeBoolean(buffer, key, value, index);
+            }
+            else if (value instanceof Date || (0, utils_1.isDate)(value)) {
+                index = serializeDate(buffer, key, value, index);
+            }
+            else if (value === undefined) {
+                if (ignoreUndefined === false)
+                    index = serializeNull(buffer, key, value, index);
+            }
+            else if (value === null) {
+                index = serializeNull(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'ObjectId' || value['_bsontype'] === 'ObjectID') {
+                index = serializeObjectId(buffer, key, value, index);
+            }
+            else if ((0, utils_1.isUint8Array)(value)) {
+                index = serializeBuffer(buffer, key, value, index);
+            }
+            else if (value instanceof RegExp || (0, utils_1.isRegExp)(value)) {
+                index = serializeRegExp(buffer, key, value, index);
+            }
+            else if (type === 'object' && value['_bsontype'] == null) {
+                index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, false, path);
+            }
+            else if (type === 'object' && value['_bsontype'] === 'Decimal128') {
+                index = serializeDecimal128(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Long' || value['_bsontype'] === 'Timestamp') {
+                index = serializeLong(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Double') {
+                index = serializeDouble(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Code') {
+                index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined);
+            }
+            else if (typeof value === 'function' && serializeFunctions) {
+                index = serializeFunction(buffer, key, value, index, checkKeys, depth, serializeFunctions);
+            }
+            else if (value['_bsontype'] === 'Binary') {
+                index = serializeBinary(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Symbol') {
+                index = serializeSymbol(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'DBRef') {
+                index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions);
+            }
+            else if (value['_bsontype'] === 'BSONRegExp') {
+                index = serializeBSONRegExp(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Int32') {
+                index = serializeInt32(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'MinKey' || value['_bsontype'] === 'MaxKey') {
+                index = serializeMinMax(buffer, key, value, index);
+            }
+            else if (typeof value['_bsontype'] !== 'undefined') {
+                throw new error_1.BSONTypeError("Unrecognized or invalid _bsontype: ".concat(String(value['_bsontype'])));
+            }
         }
-        else  //cljs clojure map case
-        {
+      }
+       else  //cljs clojure map case
+       {
            //<cljs//////////////////////////////////////////////////////////////////////////////////////////////////////
 
            var pairs = cljs.core.seq(object);
@@ -917,40 +916,39 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
              key = cljs.core.first(pair);
              value = cljs.core.second(pair);
              key=cljs.core.name(key);
-
+            
            //>cljs//////////////////////////////////////////////////////////////////////////////////////////////////////
-
-                       // Is there an override value
-                       if (value && value.toBSON) {
-                           if (typeof value.toBSON !== 'function')
-                               throw new TypeError('toBSON is not a function');
-                           value = value.toBSON();
-                       }
-                       // Check the type of the value
-                       var type = typeof value;
-                       // Check the key and throw error if it's illegal
-                       if (typeof key === 'string' && !ignoreKeys.has(key)) {
-                           if (key.match(regexp) != null) {
-                               // The BSON spec doesn't allow keys with null bytes because keys are
-                               // null-terminated.
-                               throw Error('key ' + key + ' must not contain null bytes');
-                           }
-                           if (checkKeys) {
-                               if ('$' === key[0]) {
-                                   throw Error('key ' + key + " must not start with '$'");
-                               }
-                               else if (~key.indexOf('.')) {
-                                   throw Error('key ' + key + " must not contain '.'");
-                               }
-                           }
-                       }
-
-                       ////checking the type of the value and serialize,check cljs first
+           
+            
+             // Is there an override value
+            if (typeof (value === null || value === void 0 ? void 0 : value.toBSON) === 'function') {
+                value = value.toBSON();
+            }
+            // Check the type of the value
+            var type = typeof value;
+            // Check the key and throw error if it's illegal
+            if (typeof key === 'string' && !ignoreKeys.has(key)) {
+                if (key.match(regexp) != null) {
+                    // The BSON spec doesn't allow keys with null bytes because keys are
+                    // null-terminated.
+                    throw Error('key ' + key + ' must not contain null bytes');
+                }
+                if (checkKeys) {
+                    if ('$' === key[0]) {
+                        throw Error('key ' + key + " must not start with '$'");
+                    }
+                    else if (~key.indexOf('.')) {
+                        throw Error('key ' + key + " must not contain '.'");
+                    }
+                }
+            }
+            
+          ////checking the type of the value and serialize,check cljs first
 
                        //cljs///////////////////////////////////////////////////////////////////////////////////////////
-                       if(isClojureVector)  //cljs
-                       {
-                         index = serializeObject(
+           if(isClojureVector)  //cljs
+           {
+             index = serializeObject(
                                                      buffer,
                                                      key,
                                                      value,
@@ -962,85 +960,83 @@ function serializeInto(buffer, object, checkKeys, startingIndex, depth, serializ
                                                      false,
                                                      path
                                                    );
-                       }
-                       /////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-                       else if (type === 'string') {
-                           index = serializeString(buffer, key, value, index);
-                       }
-                       else if (type === 'number') {
-                           index = serializeNumber(buffer, key, value, index);
-                       }
-                       else if (type === 'bigint') {
-                           throw new TypeError('Unsupported type BigInt, please use Decimal128');
-                       }
-                       else if (type === 'boolean') {
-                           index = serializeBoolean(buffer, key, value, index);
-                       }
-                       else if (value instanceof Date || utils_1.isDate(value)) {
-                           index = serializeDate(buffer, key, value, index);
-                       }
-                       else if (value === undefined) {
-                           if (ignoreUndefined === false)
-                               index = serializeNull(buffer, key, value, index);
-                       }
-                       else if (value === null) {
-                           index = serializeNull(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'ObjectId' || value['_bsontype'] === 'ObjectID') {
-                           index = serializeObjectId(buffer, key, value, index);
-                       }
-                       else if (utils_1.isUint8Array(value)) {
-                           index = serializeBuffer(buffer, key, value, index);
-                       }
-                       else if (value instanceof RegExp || utils_1.isRegExp(value)) {
-                           index = serializeRegExp(buffer, key, value, index);
-                       }
-                       else if (type === 'object' && value['_bsontype'] == null) {
-                           index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, false, path);
-                       }
-                       else if (type === 'object' && value['_bsontype'] === 'Decimal128') {
-                           index = serializeDecimal128(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'Long' || value['_bsontype'] === 'Timestamp') {
-                           index = serializeLong(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'Double') {
-                           index = serializeDouble(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'Code') {
-                           index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined);
-                       }
-                       else if (typeof value === 'function' && serializeFunctions) {
-                           index = serializeFunction(buffer, key, value, index, checkKeys, depth, serializeFunctions);
-                       }
-                       else if (value['_bsontype'] === 'Binary') {
-                           index = serializeBinary(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'Symbol') {
-                           index = serializeSymbol(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'DBRef') {
-                           index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions);
-                       }
-                       else if (value['_bsontype'] === 'BSONRegExp') {
-                           index = serializeBSONRegExp(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'Int32') {
-                           index = serializeInt32(buffer, key, value, index);
-                       }
-                       else if (value['_bsontype'] === 'MinKey' || value['_bsontype'] === 'MaxKey') {
-                           index = serializeMinMax(buffer, key, value, index);
-                       }
-                       else if (typeof value['_bsontype'] !== 'undefined') {
-                           throw new TypeError('Unrecognized or invalid _bsontype: ' + value['_bsontype']);
-                       }
-
-                   pairs=cljs.core.rest(pairs);        ///cljs
-                   }
-
-        } //else clojuremap
+            }
+////////////////////////////////////////////////////////////////////////////////////////////////
+            if (type === 'string') {
+                index = serializeString(buffer, key, value, index);
+            }
+            else if (type === 'number') {
+                index = serializeNumber(buffer, key, value, index);
+            }
+            else if (type === 'bigint') {
+                throw new error_1.BSONTypeError('Unsupported type BigInt, please use Decimal128');
+            }
+            else if (type === 'boolean') {
+                index = serializeBoolean(buffer, key, value, index);
+            }
+            else if (value instanceof Date || (0, utils_1.isDate)(value)) {
+                index = serializeDate(buffer, key, value, index);
+            }
+            else if (value === undefined) {
+                if (ignoreUndefined === false)
+                    index = serializeNull(buffer, key, value, index);
+            }
+            else if (value === null) {
+                index = serializeNull(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'ObjectId' || value['_bsontype'] === 'ObjectID') {
+                index = serializeObjectId(buffer, key, value, index);
+            }
+            else if ((0, utils_1.isUint8Array)(value)) {
+                index = serializeBuffer(buffer, key, value, index);
+            }
+            else if (value instanceof RegExp || (0, utils_1.isRegExp)(value)) {
+                index = serializeRegExp(buffer, key, value, index);
+            }
+            else if (type === 'object' && value['_bsontype'] == null) {
+                index = serializeObject(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined, false, path);
+            }
+            else if (type === 'object' && value['_bsontype'] === 'Decimal128') {
+                index = serializeDecimal128(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Long' || value['_bsontype'] === 'Timestamp') {
+                index = serializeLong(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Double') {
+                index = serializeDouble(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Code') {
+                index = serializeCode(buffer, key, value, index, checkKeys, depth, serializeFunctions, ignoreUndefined);
+            }
+            else if (typeof value === 'function' && serializeFunctions) {
+                index = serializeFunction(buffer, key, value, index, checkKeys, depth, serializeFunctions);
+            }
+            else if (value['_bsontype'] === 'Binary') {
+                index = serializeBinary(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Symbol') {
+                index = serializeSymbol(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'DBRef') {
+                index = serializeDBRef(buffer, key, value, index, depth, serializeFunctions);
+            }
+            else if (value['_bsontype'] === 'BSONRegExp') {
+                index = serializeBSONRegExp(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'Int32') {
+                index = serializeInt32(buffer, key, value, index);
+            }
+            else if (value['_bsontype'] === 'MinKey' || value['_bsontype'] === 'MaxKey') {
+                index = serializeMinMax(buffer, key, value, index);
+            }
+            else if (typeof value['_bsontype'] !== 'undefined') {
+                throw new error_1.BSONTypeError("Unrecognized or invalid _bsontype: ".concat(String(value['_bsontype'])));
+            }
+            
+            pairs=cljs.core.rest(pairs);        ///cljs                
+            }           
+      }   //else clojuremap
+    
     }
     // Remove the path
     path.pop();
