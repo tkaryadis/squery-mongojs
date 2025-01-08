@@ -1,5 +1,0 @@
-rm -rf target
-java -jar usecljs-0.1.0-SNAPSHOT-standalone.jar 0
-shadow-cljs compile app
-java -jar usecljs-0.1.0-SNAPSHOT-standalone.jar 1
-node main.js

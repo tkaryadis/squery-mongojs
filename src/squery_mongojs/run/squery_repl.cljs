@@ -9,8 +9,6 @@
             squery-mongo-core.operators.uoperators
             squery-mongo-core.operators.options
             squery-mongo-core.operators.stages
-            [cljs.core.async :refer [go go-loop <!]]
-            [cljs.core.async.interop :refer-macros [<p!]]
             [squery-mongojs.squery-arguments :refer-macros [p f qf u] :refer [o d]]
             [squery-mongojs.util :refer [golet squery]]
             [squery-mongojs.driver.cursor :refer [c-take-all c-print-all]]

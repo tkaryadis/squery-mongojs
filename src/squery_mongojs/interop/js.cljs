@@ -1,2 +1,4 @@
-(ns squery-mongojs.interop.js
-  (:require-macros [squery-mongojs.interop.js]))
+(ns squery-mongojs.interop.js)
+
+(defn js->kclj [obj]
+  (js->clj obj :keywordize-keys true))

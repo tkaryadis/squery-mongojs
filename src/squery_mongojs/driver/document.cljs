@@ -1,5 +1,6 @@
 (ns squery-mongojs.driver.document
-  (:require [squery-mongo-core.utils :refer [ordered-map]]))
+  ;(:require [squery-mongo-core.utils :refer [ordered-map]])
+  )
 
 (defn clj->shallow-js
   "Changes the external clj-map to js-map (doesn't change the keys or the values)"
@@ -12,17 +13,11 @@
               _ (aset jobj k (get m k))]
           (recur (rest ks)))))))
 
-(defn js->clj-k [js-obj]
-  (js->clj js-obj
-           :keywordize-keys true))
-
-#_(def default-decode-js (atom false))
-
-#_(defn set-defaultDecode-js [decodejs]
-  (reset! default-decode-js decodejs))
-
-#_(defn get-default-decode-js []
-  @default-decode-js)
+(defn print-doc [doc]
+  (if (map? doc)
+    (cljs.pprint/pprint doc)
+    (let [doc-str (js/JSON.stringify doc nil 2)]
+      (.log js/console doc-str))))
 
 #_(defn clj-doc
   ([omap]
@@ -30,9 +25,3 @@
   ([k1 v1 & kvs]
    (let [omap (apply ordered-map (concat [k1 v1] kvs))]
      (clj->js omap))))
-
-#_(defn clj->json [m]
-  (generate-string m))
-
-#_(defn json->clj [m]
-  (parse-string m))

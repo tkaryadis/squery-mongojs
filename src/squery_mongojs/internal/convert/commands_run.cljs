@@ -2,10 +2,13 @@
   (:require [squery-mongojs.internal.convert.common :refer [decode-js? rxjs?]]
             [squery-mongo-core.utils :refer [ordered-map]]
             [squery-mongojs.driver.document :refer [clj->shallow-js]]
-            ["rxjs" :as r :refer [from]]
+    ;["rxjs" :as r :refer [from]]
             clojure.pprint))
 
 (def  bson (js/require "bson"))
+
+(def r (js/require "rxjs"))
+(def from (.-from r))
 
 (def serialize (.-serialize bson))
 (def deserialize (.-deserialize bson))

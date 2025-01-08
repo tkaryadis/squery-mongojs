@@ -1,28 +1,43 @@
 (ns squery-mongojs.driver.cursor
-  (:require cljs.pprint))
+  (:require
+    #_["rxjs" :as r :refer [from of firstValueFrom range timer Notification concat fromEvent pipe zip bindNodeCallback]]
+    ;["rxjs/operators" :as o :refer []]
+            #_["rxjs/internal/observable/innerFrom" :as rfrom :refer [fromAsyncIterable fromIterable fromPromise]]
+            #_[squery-mongojs.interop.rxjs :refer [subscribe rxmap map-to rxfilter concatMap tap catchError
+                                                 then onErrorResumeNextWith]]
+            cljs.pprint))
+
+(def o (js/require "rxjs/operators"))
 
 (def mongodb (js/require "mongodb"))
 (def AggregationCursor (.-AggregationCursor mongodb))
 (def FindCursor (.-FindCursor mongodb))
 
-#_(defn c-take-all [cursor]
-  (go-loop [docs []]
-           (if (<p! (.hasNext cursor))
-             (recur (conj docs (<p! (.next cursor))))
-             docs)))
+;;of(1,2,3)
+;.pipe(reduce((acc,val) => acc+val,100))
+;.subscribe(d=>console.log(d))
 
-#_(defn c-print-all [cursor]
-  (go (cond
-        (or (instance? AggregationCursor cursor)
-            (instance? FindCursor cursor))
-        (<! (go-loop []
-              (if (<p! (.hasNext cursor))
-                (let [doc (<p! (.next cursor))]
-                  (do (if (map? doc)
-                        (cljs.pprint/pprint doc)
-                        (let [doc-str (.stringify js/JSON doc nil 2)]
-                          (.log js/console doc-str)))
-                      (recur)))))))))
+(defn take-all [ob]
+  (-> ob
+      (.pipe
+        (.reduce o (fn [col doc] (conj col doc)) []))))
+
+#_(defn print-doc [doc]
+  (-> ob
+      (.pipe
+        (o/tap (fn [doc]
+                 (if (map? doc)
+                   (cljs.pprint/pprint doc)
+                   (let [doc-str (js/JSON.stringify doc nil 2)]
+                     (.log js/console doc-str))))))))
+
+#_(defn print-all [ob]
+  (-> ob
+      (subscribe (fn [doc]
+                   (if (map? doc)
+                     (cljs.pprint/pprint doc)
+                     (let [doc-str (js/JSON.stringify doc nil 2)]
+                       (.log js/console doc-str)))))))
 
 #_(defn c-first-doc [docs-iterable]
   (let [iterator (.iterator docs-iterable)]
