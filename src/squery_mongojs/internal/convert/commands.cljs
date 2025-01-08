@@ -1,6 +1,6 @@
-(ns squery-mongo.internal.convert.commands
+(ns squery-mongojs.internal.convert.commands
   (:require [squery-mongo-core.internal.convert.commands :refer [split-db-namespace]]
-            [squery-mongo.driver.settings :refer [defaults]]))
+            [squery-mongojs.driver.settings :refer [defaults]]))
 
 (def mongodb (js/require "mongodb"))
 (def Collection (.-Collection mongodb))

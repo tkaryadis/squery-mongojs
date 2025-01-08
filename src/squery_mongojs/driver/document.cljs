@@ -1,4 +1,4 @@
-(ns squery-mongo.driver.document
+(ns squery-mongojs.driver.document
   (:require [squery-mongo-core.utils :refer [ordered-map]]))
 
 (defn clj->shallow-js
@@ -30,9 +30,6 @@
   ([k1 v1 & kvs]
    (let [omap (apply ordered-map (concat [k1 v1] kvs))]
      (clj->js omap))))
-
-
-
 
 #_(defn clj->json [m]
   (generate-string m))

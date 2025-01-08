@@ -1,7 +1,7 @@
-(ns squery-mongo.squery-arguments
-  (:require-macros [squery-mongo.squery-arguments])
-  (:require squery-mongo.internal.convert.squery-arguments
-            [squery-mongo.internal.convert.common :refer [decode-js?]]))
+(ns squery-mongojs.squery-arguments
+  (:require-macros [squery-mongojs.squery-arguments])
+  (:require squery-mongojs.internal.convert.squery-arguments
+            [squery-mongojs.internal.convert.common :refer [decode-js?]]))
 
 (defn o [& args]
   (let [options (apply (partial merge {}) (map js->clj args))

@@ -1,16 +1,5 @@
-(ns squery-mongo.util
-  (:require [cljs.core.async :refer [go]]
-             squery-mongo-core.operators.operators))
-
-(defmacro golet
-  "Like (go (let ...))"
-  [bindings & body]
-  `(go (let ~bindings ~@body)))
-
-(defmacro gotry
-  "Like (go (let ...))"
-  [bindings & body]
-  `(go (try ~bindings ~@body)))
+(ns squery-mongojs.util
+  (:require squery-mongo-core.operators.operators))
 
 (defmacro squery
   "squery code should be under this enviroment,this enviroment is auto-included from query macros.
@@ -21,3 +10,5 @@
   [squery-code]
   `(let ~squery-mongo-core.operators.operators/operators-mappings
      ~squery-code))
+
+

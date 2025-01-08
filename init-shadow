@@ -1,10 +1,12 @@
-java -jar usecljs-0.1.0-SNAPSHOT-standalone.jar 0
-lein npm install
-lein cljsbuild once
-java -jar usecljs-0.1.0-SNAPSHOT-standalone.jar 1
+npm install
+shadow-cljs stop
+shadow-cljs start
+rm pom.xml
+npx shadow-cljs pom
 cp ./#bson-clj-files/bson.js ./node_modules/bson/lib/bson.js
 cp ./#bson-clj-files/serializer.js ./node_modules/bson/lib/parser/serializer.js
 cp ./#bson-clj-files/deserializer.js ./node_modules/bson/lib/parser/deserializer.js
+
 
 
 

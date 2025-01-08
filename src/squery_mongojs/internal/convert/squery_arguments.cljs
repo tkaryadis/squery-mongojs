@@ -1,4 +1,4 @@
-(ns squery-mongo.internal.convert.squery-arguments
+(ns squery-mongojs.internal.convert.squery-arguments
   (:require [squery-mongo-core.internal.convert.common :refer [single-maps]]
             [squery-mongo-core.internal.convert.commands
              :refer [get-pipeline-options squery-pipeline->mql-pipeline args->query-updateOperators-options squery-map->mql-map]]))

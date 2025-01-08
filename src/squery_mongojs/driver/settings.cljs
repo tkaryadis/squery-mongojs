@@ -1,4 +1,4 @@
-(ns squery-mongo.driver.settings)
+(ns squery-mongojs.driver.settings)
 
 ;;defaults,i can add anything i want,but squery-j will look those if i dont give a argument it needs
 #_{:client client                              ;;default
@@ -8,10 +8,12 @@
 
    ;;?TODO
    :registry registry                          ;;no default value,default to Document if decode=js/cljs,defaults to pojo if decode a Class!=Document
-   :decode decode                              ;;default (accepted defaults only java or clj)
+   :decode decode                              ;;js or cljs
+   ;:rxjs                                       ;;true or false (if true observables are returned) (default false)
    }
 
 (def defaults-map (atom {:connection-string "mongodb://localhost:27017"
+                         :rxjs false
                          :session nil}))
 
 (defn defaults [k]
@@ -41,11 +43,3 @@
 #_(defn get-mongo-session []
   @mongo-session)
 
-;;default decode
-#_(def default-decode-java (atom true))
-
-#_(defn set-default-decode-java [java-decode?]
-  (reset! default-decode-java java-decode?))
-
-#_(defn get-decode-java []
-  @default-decode-java)

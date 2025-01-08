@@ -1,9 +1,11 @@
-(ns squery-mongo.driver.client
+(ns squery-mongojs.driver.client
   (:require clojure.string
-            [squery-mongo.driver.settings :refer [defaults]]))
+            [squery-mongojs.driver.settings :refer [defaults]]
+            [squery-mongojs.interop.js :refer [js-await]]
+            ["mongodb" :as mongodb]))
 
-(def mongodb (js/require "mongodb"))
-
+;;.connect the client is not needed > 4.7 (i use > 4.7 driver) client connects when crub
+;;  but bug for some reason if not connect, so i connect before crub
 (defn create-mongo-client
   ([]
    (let [MongoClient (.-MongoClient mongodb)]
@@ -58,10 +60,6 @@
           ;- (prn connection-string)
           ]
       connection-string))
-
-
-
-
 
 #_(defn connect
     ([] (connect {}))     ;;default=localhost port=27017
