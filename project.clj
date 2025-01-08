@@ -6,8 +6,7 @@
 
   :dependencies [
                  [org.clojure/clojure "1.12.0"]
-                 ;[org.clojure/clojurescript  "1.11.132"]
-                 [org.clojure/clojurescript  "1.11.4"]
+                 [org.clojure/clojurescript  "1.11.4"]   ;;for more new cljs i have json dep conflict, need data.json in core
                  [org.squery/squery-mongo-core "0.2.0-SNAPSHOT"]
                  [frankiesardo/linked "1.3.0"]
                  [cljs-bean "1.6.0"]]
@@ -16,7 +15,7 @@
                         :source-paths ["src"]
                         :compiler     {
                                        :output-to     "out/squery.js"
-                                       :main          "squery-mongojs.run.test" ;;  "squery-mongo.run.squery-repl"
+                                       :main          "squery-mongojs.examples.test"
                                        :target        :nodejs
                                        :optimizations  :none    ;:none ;;advanced
                                        :install-deps   true

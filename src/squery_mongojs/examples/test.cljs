@@ -1,5 +1,5 @@
-(ns squery-mongojs.run.test
-  (:use squery-mongo-core.operators.operators
+(ns squery-mongojs.examples.test
+  #_(:use squery-mongo-core.operators.operators
         squery-mongo-core.operators.qoperators
         squery-mongo-core.operators.uoperators
         squery-mongo-core.operators.stages)
@@ -9,7 +9,6 @@
             squery-mongo-core.operators.options
             squery-mongo-core.operators.stages
             [squery-mongojs.squery-arguments :refer-macros [p f qf u] :refer [o d]]
-    ;[squery-mongojs.driver.cursor :refer [c-take-all c-print-all]]
             [squery-mongojs.driver.cursor :refer [take-all]]
             [squery-mongojs.driver.settings :refer [update-defaults defaults]]
             [squery-mongojs.driver.client :refer [create-mongo-client]]
@@ -18,10 +17,7 @@
             [cljs.reader :refer [read-string]]
             [squery-mongojs.driver.document :refer [print-doc]]
             cljs.pprint
-            #_["rxjs" :as r :refer [from of range timer Notification concat fromEvent pipe zip bindNodeCallback]]
-            #_["rxjs/operators" :as o :refer []]
-            #_["rxjs/internal/observable/innerFrom" :as rfrom :refer [fromAsyncIterable fromIterable fromPromise]]
-            [squery-mongojs.interop.rxjs :refer [of from then subscribe]]
+            [squery-mongojs.interop.rxjs :refer [of from rxmap rxfilter concatMap tap rxreduce then subscribe]]
     ;[shadow.cljs.modern :refer [js-await]]
             ))
 
